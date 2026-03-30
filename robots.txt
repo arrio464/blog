@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Allow: /archives/
+Allow: /tags/
+Allow: /categories/
+Disallow: /about/
+Sitemap: https://arrio464.github.io/blog/sitemap.xml

@@ -1,0 +1,184 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Windows 下的 zsh | arrio's blog</title><meta name="author" content="arrio"><meta name="copyright" content="arrio"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="写在前面众所周知，Windows 官方并没有什么好用的 shell —— cmd 太过古老，而 powershell 又太慢。第三方替代品也很多，比如旨在模拟 Linux API 的 Cygwin、msys&#x2F;msys2 和 WSL1；亦或者重新实现的 POSIX shell，如 gsh。还有一些新兴的跨平台 shell，如 NuShell…… 本文将介绍另一种邪术：在 Windows 上">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Windows 下的 zsh">
+<meta property="og:url" content="https://arrio464.github.io/blog/zsh-on-windows/index.html">
+<meta property="og:site_name" content="arrio&#39;s blog">
+<meta property="og:description" content="写在前面众所周知，Windows 官方并没有什么好用的 shell —— cmd 太过古老，而 powershell 又太慢。第三方替代品也很多，比如旨在模拟 Linux API 的 Cygwin、msys&#x2F;msys2 和 WSL1；亦或者重新实现的 POSIX shell，如 gsh。还有一些新兴的跨平台 shell，如 NuShell…… 本文将介绍另一种邪术：在 Windows 上">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.gravatar.com/avatar/c28b2886d6bca87172dd7050bcb6ccee?s=256">
+<meta property="article:published_time" content="2024-10-10T02:53:48.000Z">
+<meta property="article:modified_time" content="2024-10-17T02:53:48.000Z">
+<meta property="article:author" content="arrio">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.gravatar.com/avatar/c28b2886d6bca87172dd7050bcb6ccee?s=256"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Windows 下的 zsh",
+  "url": "https://arrio464.github.io/blog/zsh-on-windows/",
+  "image": "https://www.gravatar.com/avatar/c28b2886d6bca87172dd7050bcb6ccee?s=256",
+  "datePublished": "2024-10-10T02:53:48.000Z",
+  "dateModified": "2024-10-17T02:53:48.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "arrio",
+      "url": "https://arrio464.github.io/blog/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/blog/img/favicon.png"><link rel="canonical" href="https://arrio464.github.io/blog/zsh-on-windows/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//www.google-analytics.com" crossorigin=""/><meta name="google-site-verification" content="o063DN4UMMoMV6i11gKlJZ0QDNxnDTnWMR8V_68G6Po"/><link rel="stylesheet" href="/blog/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-CKGHJV8V6C"></script><script>window.dataLayer = window.dataLayer || []
+function gtag(){dataLayer.push(arguments)}
+gtag('js', new Date())
+gtag('config', 'G-CKGHJV8V6C')
+btf.addGlobalFn('pjaxComplete', () => {
+  gtag('config', 'G-CKGHJV8V6C', {'page_path': window.location.pathname})
+}, 'google_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/blog/',
+  algolia: undefined,
+  localSearch: {"path":"/blog/search.xml","preload":true,"top_n_per_article":1,"unescape":true,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Windows 下的 zsh',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="https://www.gravatar.com/avatar/c28b2886d6bca87172dd7050bcb6ccee?s=256" onerror="this.onerror=null;this.src='/blog/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/blog/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/blog/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/blog/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/blog/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/blog/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/blog/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/blog/"><span class="site-name">arrio's blog</span></a><a class="nav-page-title" href="/blog/"><span class="site-name">Windows 下的 zsh</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/blog/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/blog/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/blog/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Windows 下的 zsh</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-10-10T02:53:48.000Z" title="发表于 2024-10-10 10:53:48">2024-10-10</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-10-17T02:53:48.000Z" title="更新于 2024-10-17 10:53:48">2024-10-17</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>8 mins.分钟</span></span></div></div></div><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;距离上次更新已过去&quot;,&quot;messageNext&quot;:&quot;天了，文章内容可能已过时。&quot;,&quot;postUpdate&quot;:&quot;2024-10-17 10:53:48&quot;}" hidden></div><h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>众所周知，Windows 官方并没有什么好用的 shell —— cmd 太过古老，而 powershell 又太慢。<br>第三方替代品也很多，比如旨在模拟 Linux API 的 Cygwin、msys&#x2F;msys2 和 WSL1；亦或者重新实现的 POSIX shell，如 <a target="_blank" rel="noopener" href="https://github.com/AdaCore/gsh">gsh</a>。还有一些新兴的跨平台 shell，如 <a target="_blank" rel="noopener" href="https://github.com/nushell/nushell">NuShell</a>……</p>
+<p>本文将介绍另一种邪术：在 Windows 上直接运行 zsh&#x2F;fish。<br><del>其实是利用了 Git for Windows 的 msys2 环境</del></p>
+<blockquote>
+<p>某些 shell，宁可换一种语言重写，都不愿意做 Windows 的支持 😭<br><del>说的就是你，<a target="_blank" rel="noopener" href="https://github.com/fish-shell/fish-shell/issues/8883#issuecomment-1775386376">fish</a></del></p>
+</blockquote>
+<h1 id="How-To"><a href="#How-To" class="headerlink" title="How To"></a>How To</h1><p>首先安装 git，在此推荐使用 scoop 管理 Windows 下的软件包。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">scoop install git</span></span><br></pre></td></tr></table></figure>
+
+<p>接着再去下载 msys2 的 <a target="_blank" rel="noopener" href="https://packages.msys2.org/base/zsh">zsh</a>，下载完成后解压 <code>etc</code> 和 <code>usr</code> 文件夹到 git 的安装目录中：<br><img src="/blog/images/zsh-on-windows/1728563025827.png" alt="1728563025827"></p>
+<p>我们已经可以在 git bash 中启动 zsh 了：<br><img src="/blog/images/zsh-on-windows/1740407324153.png" alt="1740407324153"></p>
+<p>此时已经拥有了一个完整的 shell 环境，像 <code>zsh-autosuggestion</code>、<code>zsh-completions</code>、<code>zsh-syntax-highlighting</code> 的 zsh 插件也可以正常使用。</p>
+<p>实际上，git 提供了一个<del>完整</del>（并非完整）的 msys2 环境，几乎所有的 msys2 包都可以运行起来。只是由于缺少包管理器（如 pacman），我们得手动处理依赖关系。</p>
+<h1 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h1><p>在测试过程中，也发现了一些不兼容的奇怪现象。比如，在开启 zsh-syntax-highlighting 后，输入时会出现“光标闪回”：<br><img src="/blog/images/zsh-on-windows/1740408288690.webp" alt="1740408288690"></p>
+<p>再比如，使用 vim 时会出现全屏闪烁的情况：<br><img src="/blog/images/zsh-on-windows/1740408610916.webp" alt="1740408610916"></p>
+<p>可能是 msys2 和 Windows Terminal 之间存在奇怪的兼容性问题（</p>
+<p><del>于是我又用回了 clink + WSL 的组合（逃</del></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://arrio464.github.io/blog">arrio</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://arrio464.github.io/blog/zsh-on-windows/">https://arrio464.github.io/blog/zsh-on-windows/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://arrio464.github.io/blog" target="_blank">arrio's blog</a>！</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="https://www.gravatar.com/avatar/c28b2886d6bca87172dd7050bcb6ccee?s=256" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/blog/ap-on-linux/" title="如何优雅地在 Linux 上开启 WiFi 热点"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">如何优雅地在 Linux 上开启 WiFi 热点</div></div><div class="info-2"><div class="info-item-1">在 Linux 下创建 WiFi 热点 (Access Point)，自古以来都不是一件容易的事情。 常见的解决方案有三种，hostapd、NetworkManager 和 systemd-networkd。 前两种方案用的比较多，而 systemd 近些年才在服务器中流行起来，文档和教程相对而言比较少。 一般而言，使用 NetworkManager 可以获得“开箱即用”的体验——但只能说勉强能用，存在的问题也很多。比如，5GHz 往往不能工作、不能指定频宽等等…… hostapd 则提供了许多配置项，但代价是配置非常复杂。好在有一些现成的配置文件和脚本可以参考，比如USB-WiFi、create_ap、linux-wifi-hotspot 和 linux-router。 使用 5GHz 频段网上的教程一般只涉及 2.4GHz 的配置。一开始，我以为只需要把 802.11n 改成 802.11ac，再调整一下频段就可以了。然而，现实却狠狠地打了我的脸： 1234567891011121314152月 26 14:45:16 armbian...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="https://www.gravatar.com/avatar/c28b2886d6bca87172dd7050bcb6ccee?s=256" onerror="this.onerror=null;this.src='/blog/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">arrio</div><div class="author-info-description"></div><div class="site-data"><a href="/blog/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/blog/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/blog/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/arrio464"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="toc-number">1.</span> <span class="toc-text">写在前面</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#How-To"><span class="toc-number">2.</span> <span class="toc-text">How To</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%90%8E%E8%AE%B0"><span class="toc-number">3.</span> <span class="toc-text">后记</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/blog/vmware-hyperv-iperf-benchmark/" title="VMWare、Hyper-V、iperf 和嵌套虚拟化">VMWare、Hyper-V、iperf 和嵌套虚拟化</a><time datetime="2026-01-14T03:12:45.000Z" title="发表于 2026-01-14 11:12:45">2026-01-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/blog/frida-experience/" title="frida 初体验——记一次 Android APP 逆向">frida 初体验——记一次 Android APP 逆向</a><time datetime="2025-09-02T04:54:05.000Z" title="发表于 2025-09-02 12:54:05">2025-09-02</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/blog/profiling-mcu/" title="MCU 上的性能分析器">MCU 上的性能分析器</a><time datetime="2025-07-29T02:35:27.000Z" title="发表于 2025-07-29 10:35:27">2025-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/blog/install-rtt-env-manually/" title="手动安装 RT Thread Env">手动安装 RT Thread Env</a><time datetime="2025-06-03T12:46:02.000Z" title="发表于 2025-06-03 20:46:02">2025-06-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/blog/ap-on-linux/" title="如何优雅地在 Linux 上开启 WiFi 热点">如何优雅地在 Linux 上开启 WiFi 热点</a><time datetime="2025-02-26T07:07:22.000Z" title="发表于 2025-02-26 15:07:22">2025-02-26</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2024 - 2026 By arrio</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div><div class="footer_custom_text">今天晚上吃什么？</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/blog/js/utils.js"></script><script src="/blog/js/main.js"></script><script src="/blog/js/tw_cn.js"></script><div class="js-pjax"></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/blog/js/search/local-search.js"></script></div></div></body></html>
